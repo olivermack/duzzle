@@ -4,6 +4,9 @@
          bootstrap="vendor/autoload.php"
          colors="true"
 >
+    <php>
+        <env name="WIREMOCK_HOST" value="http://wiremock:8080" />
+    </php>
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests/Unit</directory>

@@ -68,6 +68,9 @@ jobs:
         ports:
           - 8080:8080
 
+    env:
+      WIREMOCK_HOST: http://localhost:8080
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
