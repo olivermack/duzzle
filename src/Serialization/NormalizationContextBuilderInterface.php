@@ -8,5 +8,8 @@ interface NormalizationContextBuilderInterface
 {
     public function supportsNormalizationOf(object $input): bool;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function buildContextForNormalizationOf(object $input): array;
 }

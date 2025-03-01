@@ -9,7 +9,7 @@ use Duzzle\Validation\Exception\InputValidationFailedException;
 use Duzzle\Validation\Exception\OutputValidationFailedException;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
-class BlockingValidationStrategy implements ValidationStrategyInterface
+final readonly class BlockingValidationStrategy implements ValidationStrategyInterface
 {
     public function handleViolations(DuzzleTarget $target, mixed $value, ConstraintViolationListInterface $violations): void
     {

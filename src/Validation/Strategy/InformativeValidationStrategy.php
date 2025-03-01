@@ -7,13 +7,14 @@ namespace Duzzle\Validation\Strategy;
 use Duzzle\DuzzleTarget;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
-class InformativeValidationStrategy implements ValidationStrategyInterface
+final readonly class InformativeValidationStrategy implements ValidationStrategyInterface
 {
     public function __construct(
-        private readonly LoggerInterface $logger,
+        private readonly LoggerInterface $logger = new NullLogger(),
         private readonly string $logLevel = LogLevel::WARNING,
     ) {
     }
@@ -29,7 +30,7 @@ class InformativeValidationStrategy implements ValidationStrategyInterface
                         'code' => $violation->getCode(),
                         'value' => $violation->getInvalidValue(),
                     ];
-                }, iterator_to_array($violations->getIterator())),
+                }, iterator_to_array($violations)),
             ]);
         }
     }

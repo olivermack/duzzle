@@ -10,11 +10,10 @@ use Duzzle\Validation\Strategy\InformativeValidationStrategy;
 use Duzzle\Validation\Strategy\NoopValidationStrategy;
 use Duzzle\Validation\Strategy\ValidationStrategyCollection;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class DefaultStrategyCollectionFactory
 {
-    public static function create(LoggerInterface $logger = new NullLogger()): ValidationStrategyCollection
+    public static function create(?LoggerInterface $logger): ValidationStrategyCollection
     {
         return new ValidationStrategyCollection([
             DefaultStrategyKey::NOOP->value => new NoopValidationStrategy(),

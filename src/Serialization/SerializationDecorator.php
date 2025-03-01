@@ -7,23 +7,21 @@ namespace Duzzle\Serialization;
 use Duzzle\DuzzleInterface;
 use Duzzle\DuzzleOptionsKeys;
 use Duzzle\Exception\RequestException;
-use Duzzle\Exception\ResponseProcessingFailedException;
 use Duzzle\Exception\RuntimeException;
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
-use Symfony\Component\Serializer\Exception\ExceptionInterface as SerializerExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
-final class SerializationDecorator implements DuzzleInterface
+final readonly class SerializationDecorator implements DuzzleInterface
 {
     public function __construct(
-        private readonly DuzzleInterface $decorated,
-        private readonly SerializerInterface $serializer,
-        private readonly ?ContextBuilderInterface $contextBuilder = null,
-        private readonly array $defaultOptions = []
+        private DuzzleInterface $decorated,
+        private SerializerInterface $serializer,
+        private ?ContextBuilderInterface $contextBuilder = null,
+        private array $defaultOptions = []
     ) {
     }
 
@@ -31,29 +29,32 @@ final class SerializationDecorator implements DuzzleInterface
     {
         try {
             $options = $this->prepareInputFromOptions($options);
-            $response = $this->decorated->request($method, $url, array_merge($this->defaultOptions, $options));
+            $response = $this->decorated->request($method, $url, $options);
 
-            if (!$response instanceof ResponseInterface) {
-                throw new RuntimeException('The response needs to be an instance of Psr\Http\Message\ResponseInterface');
+            if (!$response instanceof Response) {
+                throw new RuntimeException('The response needs to be an instance of GuzzleHttp\Psr7\Response');
             }
 
             return $this->handleResponse($response, $options);
         } catch (GuzzleRequestException $e) {
             throw $this->mapRequestException($e, $options);
         }
-
-        throw new ResponseProcessingFailedException($method, $url, $options, $response);
     }
 
     private function prepareInputFromOptions(array $requestOptions): array
     {
+        $requestOptions = array_merge($this->defaultOptions, $requestOptions);
         $inputType = $requestOptions[DuzzleOptionsKeys::INPUT] ?? null;
         $inputFormat = $requestOptions[DuzzleOptionsKeys::INPUT_FORMAT]
             ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
             ?? null;
 
-        if ($inputFormat && $inputType) {
-            $context = $this->contextBuilder?->supportsNormalizationOf($inputType)
+        if (null !== $inputFormat && !is_string($inputFormat)) {
+            $inputFormat = null;
+        }
+
+        if (is_string($inputFormat) && !empty($inputType) && is_object($inputType)) {
+            $context = true === $this->contextBuilder?->supportsNormalizationOf($inputType)
                 ? $this->contextBuilder->buildContextForNormalizationOf($inputType)
                 : [];
 
@@ -64,9 +65,6 @@ final class SerializationDecorator implements DuzzleInterface
         return $this->enhanceContentTypeHeaderForInput($requestOptions, $inputFormat);
     }
 
-    /**
-     * @throws SerializerExceptionInterface
-     */
     private function handleResponse(Response $response, array $requestOptions): mixed
     {
         $contents = $response->getBody()->getContents();
@@ -74,11 +72,11 @@ final class SerializationDecorator implements DuzzleInterface
         $outputFormat = $requestOptions[DuzzleOptionsKeys::OUTPUT_FORMAT]
             ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
             ?? $this->detectOutputFormatFromResponse($response);
-        $context = $this->contextBuilder?->supportsDenormalizationOf($outputType)
+        $context = true === $this->contextBuilder?->supportsDenormalizationOf($outputType)
             ? $this->contextBuilder->buildContextForDenormalizationOf($outputType)
             : [];
 
-        if ($outputFormat && $outputType) {
+        if (!empty($outputFormat) && !empty($outputType)) {
             $result = $this->serializer->deserialize($contents, $outputType, $outputFormat, $context);
 
             if ($result instanceof CarriesResponseInterface) {
@@ -119,7 +117,7 @@ final class SerializationDecorator implements DuzzleInterface
         return new RequestException($errorBody, $e->getCode(), $e);
     }
 
-    private function detectOutputFormatFromResponse(Response $response): ?string
+    private function detectOutputFormatFromResponse(ResponseInterface $response): ?string
     {
         $contentType = $response->getHeaderLine('Content-type');
 
@@ -134,11 +132,15 @@ final class SerializationDecorator implements DuzzleInterface
 
     private function enhanceContentTypeHeaderForInput(array $requestOptions, ?string $format = null): array
     {
-        if (!$format) {
+        if (null === $format) {
             return $requestOptions;
         }
 
-        if (!isset($requestOptions[RequestOptions::HEADERS]) || !array_key_exists('Content-Type', $requestOptions[RequestOptions::HEADERS])) {
+        if (!isset($requestOptions[RequestOptions::HEADERS])) {
+            $requestOptions[RequestOptions::HEADERS] = [];
+        }
+
+        if (!array_key_exists('Content-Type', $requestOptions[RequestOptions::HEADERS])) {
             $requestOptions[RequestOptions::HEADERS]['Content-Type'] = $this->getContentTypeHeaderForFormat($format);
         }
 
