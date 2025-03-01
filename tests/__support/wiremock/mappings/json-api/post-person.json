@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/json-api/post-person",
+    "bodyPatterns" : [ {
+      "equalToJson" : "{ \"firstName\": \"John\", \"lastName\": \"Doe\", \"age\": 123  }",
+      "ignoreArrayOrder" : true,
+      "ignoreExtraElements" : false
+    } ]
+  },
+
+  "response": {
+    "status": 201,
+    "jsonBody": {
+      "id": 1,
+      "firstName": "{{jsonPath request.body '$.firstName'}}",
+      "lastName": "{{jsonPath request.body '$.lastName'}}",
+      "age": "{{jsonPath request.body '$.age'}}"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

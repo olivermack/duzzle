@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/json-api/simple-error"
+  },
+  "response": {
+    "status": 500,
+    "jsonBody": {
+      "message": "Something failed",
+      "code": 299
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

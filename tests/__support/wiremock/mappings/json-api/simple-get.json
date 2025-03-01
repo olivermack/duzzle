@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/json-api/simple-get"
+  },
+
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "foo": "bar"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

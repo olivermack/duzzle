@@ -1,0 +1,54 @@
+{
+    "name": "olivermack/duzzle",
+    "description": "Opinionated (thin) wrapper for Guzzle supporting request and response DTOs serialization with Symfony Serializer and Symfony Validator",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Duzzle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Duzzle\\Tests\\Fixtures\\": "tests/__support/Fixtures"
+        }
+    },
+    "authors": [
+        {
+            "name": "Oliver Mack"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "guzzlehttp/guzzle": "^7.0",
+        "symfony/serializer": "^7.0",
+        "symfony/property-info": "^7.2",
+        "symfony/property-access": "^7.2",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.7",
+        "phpunit/phpunit": "^11.5",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.70",
+        "symfony/validator": "^7.2",
+        "mockery/mockery": "^1.6",
+        "wiremock-php/wiremock-php": "^2.35"
+    },
+    "suggest": {
+        "symfony/validator": "To allow request and response DTO validation"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "analyse": "phpstan analyse",
+        "fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --config=.php-cs-fixer.dist.php --verbose",
+        "test": "pest",
+        "test-full": "XDEBUG_MODE=coverage pest --coverage --min=90",
+        "test-arch": "pest "
+    }
+}
