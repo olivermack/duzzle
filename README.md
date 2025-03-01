@@ -13,9 +13,9 @@ If you’re seeking a straightforward, “DTO-first” approach to RESTful inter
 - [x] most crucial code quality tooling
 - [ ] DTO (de)serialization
   - [x] dealing with JSON API output
-  - [ ] dealing with JSON API input
+  - [x] dealing with JSON API input
   - [ ] dealing with XML API output
   - [ ] dealing with XML API input
-- [ ] DTO validation
-  - [ ] validating output DTOs
-  - [ ] validating input DTOs
+- [x] DTO validation
+  - [x] validating output DTOs
+  - [x] validating input DTOs
