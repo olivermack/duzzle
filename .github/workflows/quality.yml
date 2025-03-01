@@ -1,4 +1,4 @@
-name: Static analysis
+name: Quality
 
 on:
   push:
