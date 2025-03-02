@@ -9,7 +9,7 @@ use WireMock\Client\WireMock;
 
 describe('SimpleHttp Client', function () {
     beforeEach(function () {
-        $wireMockHost =  $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/';
+        $wireMockHost = $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/';
         $parsedWireMockHost = parse_url($wireMockHost);
         $this->wireMock = WireMock::create($parsedWireMockHost['host'], $parsedWireMockHost['port']);
         $this->httpClient = new GuzzleHttp\Client([
