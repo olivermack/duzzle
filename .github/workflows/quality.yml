@@ -135,7 +135,12 @@ jobs:
         run: docker compose up -d wiremock
 
       - name: Show Wiremock logs
-        run: docker compose logs wiremock
+        run: |
+          for i in {1..5}; do
+            echo "Showing WireMock Logs..."
+            docker compose logs wiremock
+            sleep 2
+          done
 
       - name: Wait for Wiremock
         run: |
