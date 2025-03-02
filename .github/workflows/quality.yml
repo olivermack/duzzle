@@ -134,6 +134,9 @@ jobs:
       - name: Run WireMock
         run: docker compose up -d wiremock
 
+      - name: Show Wiremock logs
+        run: docker compose logs wiremock
+
       - name: Wait for Wiremock
         run: |
           curl --retry 5 --retry-delay 3 --retry-connrefused $WIREMOCK_HOST/__admin/health
