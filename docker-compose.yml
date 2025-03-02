@@ -26,3 +26,10 @@ services:
       WIREMOCK_OPTIONS: "--verbose --global-response-templating --disable-gzip"
     volumes:
       - ./tests/__support/wiremock:/home/wiremock:ro
+
+  json-server:
+    image: clue/json-server
+    ports:
+      - "8081:80"
+    volumes:
+      - ./tests/__support/json-server/db.json:/data/db.json

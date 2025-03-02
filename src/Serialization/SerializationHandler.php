@@ -4,46 +4,22 @@ declare(strict_types=1);
 
 namespace Duzzle\Serialization;
 
-use Duzzle\DuzzleInterface;
 use Duzzle\DuzzleOptionsKeys;
-use Duzzle\Exception\RequestException;
-use Duzzle\Exception\RuntimeException;
-use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\Serializer\Encoder\DecoderInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Serializer;
 
-final readonly class SerializationDecorator implements DuzzleInterface
+readonly class SerializationHandler
 {
     public function __construct(
-        private DuzzleInterface $decorated,
-        private SerializerInterface $serializer,
+        private Serializer $serializer,
         private ?ContextBuilderInterface $contextBuilder = null,
-        private array $defaultOptions = []
     ) {
     }
 
-    public function request(string $method, string $url, array $options = []): mixed
+    public function handleInputSerialization(array $requestOptions): array
     {
-        try {
-            $options = $this->prepareInputFromOptions($options);
-            $response = $this->decorated->request($method, $url, $options);
-
-            if (!$response instanceof Response) {
-                throw new RuntimeException('The response needs to be an instance of GuzzleHttp\Psr7\Response');
-            }
-
-            return $this->handleResponse($response, $options);
-        } catch (GuzzleRequestException $e) {
-            throw $this->mapRequestException($e, $options);
-        }
-    }
-
-    private function prepareInputFromOptions(array $requestOptions): array
-    {
-        $requestOptions = array_merge($this->defaultOptions, $requestOptions);
         $inputType = $requestOptions[DuzzleOptionsKeys::INPUT] ?? null;
         $inputFormat = $requestOptions[DuzzleOptionsKeys::INPUT_FORMAT]
             ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
@@ -65,13 +41,23 @@ final readonly class SerializationDecorator implements DuzzleInterface
         return $this->enhanceContentTypeHeaderForInput($requestOptions, $inputFormat);
     }
 
-    private function handleResponse(Response $response, array $requestOptions): mixed
+    public function handleResponseDeserialization(Response $response, array $requestOptions): mixed
     {
+        $response->getBody()->rewind();
         $contents = $response->getBody()->getContents();
-        $outputType = $requestOptions[DuzzleOptionsKeys::OUTPUT] ?? null;
-        $outputFormat = $requestOptions[DuzzleOptionsKeys::OUTPUT_FORMAT]
-            ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
-            ?? $this->detectOutputFormatFromResponse($response);
+
+        if ($response->getStatusCode() < 400) {
+            $outputType = $requestOptions[DuzzleOptionsKeys::OUTPUT] ?? null;
+            $outputFormat = $requestOptions[DuzzleOptionsKeys::OUTPUT_FORMAT]
+                ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
+                ?? $this->detectOutputFormatFromResponse($response);
+        } else {
+            $outputType = $requestOptions[DuzzleOptionsKeys::ERROR] ?? null;
+            $outputFormat = $requestOptions[DuzzleOptionsKeys::ERROR_FORMAT]
+                ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
+                ?? $this->detectOutputFormatFromResponse($response);
+        }
+
         $context = true === $this->contextBuilder?->supportsDenormalizationOf($outputType)
             ? $this->contextBuilder->buildContextForDenormalizationOf($outputType)
             : [];
@@ -84,37 +70,11 @@ final readonly class SerializationDecorator implements DuzzleInterface
             }
 
             return $result;
-        } elseif ($outputFormat && $this->serializer instanceof DecoderInterface) {
+        } elseif ($outputFormat) {
             return $this->serializer->decode($contents, $outputFormat, $context);
         }
 
         return $contents;
-    }
-
-    private function mapRequestException(GuzzleRequestException $e, array $requestOptions): RequestException
-    {
-        $errorFormat = $requestOptions[DuzzleOptionsKeys::ERROR_FORMAT]
-            ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
-            ?? $this->detectOutputFormatFromResponse($e->getResponse());
-        $errorType = $requestOptions[DuzzleOptionsKeys::ERROR] ?? null;
-        $e->getResponse()?->getBody()->rewind();
-        $errorBody = $e->getResponse()?->getBody()->getContents();
-        $context = $this->contextBuilder?->supportsDenormalizationOf($errorType)
-            ? $this->contextBuilder->buildContextForDenormalizationOf($errorType)
-            : [];
-
-        if ($errorFormat && $errorType) {
-            $errorBody = $this->serializer->deserialize(
-                $errorBody,
-                $errorType,
-                $errorFormat,
-                $context,
-            );
-        } elseif ($errorFormat && $this->serializer instanceof DecoderInterface) {
-            $errorBody = $this->serializer->decode($errorBody, $errorFormat, $context);
-        }
-
-        return new RequestException($errorBody, $e->getCode(), $e);
     }
 
     private function detectOutputFormatFromResponse(ResponseInterface $response): ?string

@@ -8,34 +8,29 @@ use Duzzle\Tests\Fixtures\ValidatedPersonDtoWithPropertyPromotion;
 use Duzzle\Validation\Exception\InputValidationFailedException;
 use Duzzle\Validation\Exception\OutputValidationFailedException;
 use Duzzle\Validation\Strategy\DefaultStrategyKey;
-use Duzzle\Validation\ValidationDecorator;
 
 describe('Validated JsonApi Client', function () {
     beforeEach(function () {
-        $this->httpClient = new GuzzleHttp\Client([
+        $this->duzzle = DuzzleBuilder::create([
             'timeout' => 1.0,
             'base_uri' => $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/',
-        ]);
-
-        $this->duzzle = DuzzleBuilder::create([
-            ValidationDecorator::INPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
-            ValidationDecorator::OUTPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
+            DuzzleOptionsKeys::INPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
+            DuzzleOptionsKeys::OUTPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
         ])
-            ->withGuzzleClient($this->httpClient)
             ->withDefaultSerializer()
             ->withDefaultValidator()
             ->build();
     });
 
     it('deserializes to validated DTO with property promotion', function () {
-        $dto = $this->duzzle->request('GET', '/json-api/get-person', [
+        $res = $this->duzzle->request('GET', '/json-api/get-person', [
             DuzzleOptionsKeys::OUTPUT => ValidatedPersonDtoWithPropertyPromotion::class,
         ]);
-        expect($dto)
+        expect($res->getDuzzleResult())
             ->toBeInstanceOf(ValidatedPersonDtoWithPropertyPromotion::class)
-            ->and($dto->firstName)->toBe('John')
-            ->and($dto->lastName)->toBe('Doe')
-            ->and($dto->age)->toBe(123);
+            ->and($res->getDuzzleResult()->firstName)->toBe('John')
+            ->and($res->getDuzzleResult()->lastName)->toBe('Doe')
+            ->and($res->getDuzzleResult()->age)->toBe(123);
     });
 
     it('bails if output DTO is invalid', function () {

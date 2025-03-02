@@ -2,8 +2,8 @@ Duzzle: An opinionated, DTO-centric Guzzle HTTP Wrapper
 ===
 
 Duzzle (_[DTOs](https://en.wikipedia.org/wiki/Data_transfer_object) + [Guzzle](https://github.com/guzzle/guzzle)_) is a lightweight extension on top of Guzzle designed to seamlessly integrate DTO serialization and validation workflows into your HTTP client calls. 
-It leverages the [Symfony Serializer](https://symfony.com/doc/current/serializer.html) and (optionally) the [Symfony Validator](https://symfony.com/doc/current/validation.html) to transform y
-our domain objects (DTOs) into request payloads, validate them before dispatch, and then deserialize responses back into strongly typed objects—enabling a clean, high-level API around Guzzle’s powerful HTTP capabilities. 
+It leverages the [Symfony Serializer](https://symfony.com/doc/current/serializer.html) and (optionally) the [Symfony Validator](https://symfony.com/doc/current/validation.html) to transform
+your domain objects (DTOs) into request payloads, validate them before dispatch, and then deserialize responses back into strongly typed objects—enabling a clean, high-level API around Guzzle's powerful HTTP capabilities. 
 
 If you’re seeking a straightforward, “DTO-first” approach to RESTful interactions without manually handling JSON or validation rules, Duzzle aims to provide an easy and extensible solution.
 
@@ -45,12 +45,12 @@ $duzzle = DuzzleBuilder::create([
 With the instance you can perform your requests. To make the usage easier Duzzle only provides
 a single `request()` method, following the signature that Guzzle's `request()` provides.
 
-The main difference though is that Duzzle yields variable, deserialized results instead of a PSR response.
+To access the data which was handled by Duzzle's middlewares you need to call `getDuzzleResult()` on the response. 
 
 ```php
 // without any further specification/configuration the client
 // will automatically deserialize the resulting data as php array
-$result = $duzzle->request('GET', '/todos/1');
+$result = $duzzle->request('GET', '/todos/1')->getDuzzleResult();
 
 /**
  * array(4) {
@@ -80,7 +80,7 @@ $result = $duzzle->request('GET', '/todos/1', [
     DuzzleOptionsKeys::OUTPUT => Todo::class
     // or
     'output' => Todo::class,
-]);
+])->getDuzzleResult();
 
 /**
  * class Todo#159 (4) {
@@ -142,11 +142,11 @@ told the builder to use the default validator!
 
 ```php
 $duzzle = DuzzleBuilder::create([
-    ValidationDecorator::INPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
+    DuzzleOptionsKeys::INPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
     // same as:
     'input_validation' => 'blocking',
     
-    ValidationDecorator::OUTPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
+    DuzzleOptionsKeys::OUTPUT_VALIDATION => DefaultStrategyKey::BLOCKING->value,
     // same as:
     'output_validation' => 'blocking',
     
@@ -192,7 +192,7 @@ $todo = new Todo();
 $duzzle->request('POST', '/todos', [
     'input' => $todo,
     'input_validation' => 'blocking',
-])
+])->getDuzzleResult();
 ```
 
 > For a working example check out `examples/02-validation-json-api.php`

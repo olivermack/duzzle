@@ -13,9 +13,9 @@ $duzzle = DuzzleBuilder::create([
     ->build();
 
 // get a resource as deserialized array from the JSON api
-$result = $duzzle->request('GET', '/todos/1');
+$response = $duzzle->request('GET', '/todos/1');
 
-var_dump($result);
+var_dump($response->getDuzzleResult());
 /**
  * array(4) {
  *   'userId' => int(1)
@@ -37,11 +37,11 @@ class Todo
     public bool $completed;
 }
 
-$result = $duzzle->request('GET', '/todos/1', [
+$response = $duzzle->request('GET', '/todos/1', [
     DuzzleOptionsKeys::OUTPUT => Todo::class
 ]);
 
-var_dump($result);
+var_dump($response->getDuzzleResult());
 /**
  * class Todo#159 (4) {
  *   public ?int $id => int(1)
@@ -59,13 +59,14 @@ $newTodo->userId = 1;
 $newTodo->completed = true;
 $newTodo->title = 'My new task!';
 
-$createdTodoResult = $duzzle->request('POST', '/todos', [
+$createdTodoResponse = $duzzle->request('POST', '/todos', [
     DuzzleOptionsKeys::INPUT => $newTodo,
+//    'input' => ['title' => 'foooo'],
     // if we don't provide an output DTO we'll get the result as array!
     DuzzleOptionsKeys::OUTPUT => Todo::class,
 ]);
 
-var_dump($createdTodoResult);
+var_dump($createdTodoResponse->getDuzzleResult());
 /**
  * class Todo#170 (4) {
  *   public ?int $id => int(201)

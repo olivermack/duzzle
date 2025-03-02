@@ -6,7 +6,6 @@ namespace Duzzle;
 
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
-use Psr\Http\Message\ResponseInterface;
 
 final readonly class Duzzle implements DuzzleInterface
 {
@@ -22,8 +21,14 @@ final readonly class Duzzle implements DuzzleInterface
     /**
      * @throws GuzzleException
      */
-    public function request(string $method, string $url, array $options = []): ResponseInterface
+    public function request(string $method, string $url, array $options = []): DuzzleResponseInterface
     {
-        return $this->httpClient->request($method, $url, array_merge($this->defaultOptions, $options));
+        $response = $this->httpClient->request($method, $url, array_merge($this->defaultOptions, $options));
+
+        if (!$response instanceof DuzzleResponseInterface) {
+            $response = DuzzleResponse::fromPsrResponse($response, null);
+        }
+
+        return $response;
     }
 }

@@ -13,4 +13,6 @@ interface DuzzleOptionsKeys
     public const string OUTPUT_FORMAT = 'output_format';
     public const string ERROR = 'error';
     public const string ERROR_FORMAT = 'error_format';
+    public const string INPUT_VALIDATION = 'input_validation';
+    public const string OUTPUT_VALIDATION = 'output_validation';
 }

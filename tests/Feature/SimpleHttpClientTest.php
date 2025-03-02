@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Duzzle\DuzzleBuilder;
 use Duzzle\DuzzleOptionsKeys;
-use Duzzle\Exception\RequestException;
+use GuzzleHttp\Exception\RequestException;
 use WireMock\Client\WireMock;
 
 describe('SimpleHttp Client', function () {
@@ -12,16 +12,14 @@ describe('SimpleHttp Client', function () {
         $wireMockHost = $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/';
         $parsedWireMockHost = parse_url($wireMockHost);
         $this->wireMock = WireMock::create($parsedWireMockHost['host'], $parsedWireMockHost['port']);
-        $this->httpClient = new GuzzleHttp\Client([
-            'timeout' => 1.0,
-            'base_uri' => $wireMockHost,
-        ]);
 
         $this->duzzle = DuzzleBuilder::create([
+            'timeout' => 1.0,
+            'base_uri' => $wireMockHost,
+
             // avoid defaulting to json format
             DuzzleOptionsKeys::FORMAT => null,
         ])
-            ->withGuzzleClient($this->httpClient)
             ->withDefaultSerializer()
             ->withDefaultValidator()
             ->build();
@@ -34,7 +32,7 @@ describe('SimpleHttp Client', function () {
         $this->wireMock->stubFor(WireMock::get('/simple-get')->willReturn(WireMock::aResponse()->withBody('Some Text')));
         $res = $this->duzzle->request('GET', '/simple-get', [
         ]);
-        expect($res)->toBe('Some Text');
+        expect($res->getDuzzleResult())->toBe('Some Text');
     });
 
     test('simple 404', function () {
