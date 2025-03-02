@@ -27,7 +27,7 @@
             <directory suffix="Interface.php">./src</directory>
             <file>./src/DuzzleOptionsKeys.php</file>
             <file>./src/DuzzleTarget.php</file>
-            <file>./src/Validation/DefaultStrategyKey.php</file>
+            <file>./src/Validation/Strategy/DefaultStrategyKey.php</file>
         </exclude>
     </source>
 </phpunit>
