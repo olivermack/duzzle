@@ -1,6 +1,9 @@
 Duzzle: An opinionated, DTO-centric Guzzle HTTP Wrapper
 ===
 
+![build](https://github.com/olivermack/duzzle/actions/workflows/quality.yml/badge.svg)
+[![codecov](https://codecov.io/github/olivermack/duzzle/graph/badge.svg?token=UTCN2X0RP6)](https://codecov.io/github/olivermack/duzzle)
+
 Duzzle (_[DTOs](https://en.wikipedia.org/wiki/Data_transfer_object) + [Guzzle](https://github.com/guzzle/guzzle)_) is a lightweight extension on top of Guzzle designed to seamlessly integrate DTO serialization and validation workflows into your HTTP client calls. 
 It leverages the [Symfony Serializer](https://symfony.com/doc/current/serializer.html) and (optionally) the [Symfony Validator](https://symfony.com/doc/current/validation.html) to transform
 your domain objects (DTOs) into request payloads, validate them before dispatch, and then deserialize responses back into strongly typed objects—enabling a clean, high-level API around Guzzle's powerful HTTP capabilities. 
