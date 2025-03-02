@@ -25,6 +25,9 @@
         <exclude>
             <directory suffix="Exception.php">./src</directory>
             <directory suffix="Interface.php">./src</directory>
+            <file>./src/DuzzleOptionsKeys.php</file>
+            <file>./src/DuzzleTarget.php</file>
+            <file>./src/Validation/DefaultStrategyKey.php</file>
         </exclude>
     </source>
 </phpunit>
