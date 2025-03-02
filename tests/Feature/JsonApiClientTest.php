@@ -4,43 +4,41 @@ declare(strict_types=1);
 
 use Duzzle\DuzzleBuilder;
 use Duzzle\DuzzleOptionsKeys;
-use Duzzle\Exception\RequestException;
+use Duzzle\DuzzleResponseInterface;
 use Duzzle\Tests\Fixtures\PropertyWithResponseDto;
 use Duzzle\Tests\Fixtures\TestErrorDto;
 use Duzzle\Tests\Fixtures\TestPersonDto;
 use Duzzle\Tests\Fixtures\TestPersonDtoWithPropertyPromotion;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 
 describe('JsonApi Client', function () {
     beforeEach(function () {
-        $this->httpClient = new GuzzleHttp\Client([
+        $this->duzzle = DuzzleBuilder::create([
             'timeout' => 1.0,
             'base_uri' => $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/',
-        ]);
-
-        $this->duzzle = DuzzleBuilder::create()
-            ->withGuzzleClient($this->httpClient)
+        ])
             ->withDefaultSerializer()
             ->withDefaultValidator()
             ->build();
     });
 
     it('yields array for JSON response if no other options are set', function () {
-        $result = $this->duzzle->request('GET', '/json-api/simple-get');
-        expect($result)
+        $res = $this->duzzle->request('GET', '/json-api/simple-get');
+        expect($res->getDuzzleResult())
             ->toBeArray()
             ->toMatchArray(['foo' => 'bar']);
     });
 
     it('deserializes to DTO with property promotion', function () {
-        $dto = $this->duzzle->request('GET', '/json-api/get-person', [
+        $res = $this->duzzle->request('GET', '/json-api/get-person', [
             DuzzleOptionsKeys::OUTPUT => TestPersonDtoWithPropertyPromotion::class,
         ]);
-        expect($dto)
+        expect($res->getDuzzleResult())
             ->toBeInstanceOf(TestPersonDtoWithPropertyPromotion::class)
-            ->and($dto->firstName)->toBe('John')
-            ->and($dto->lastName)->toBe('Doe')
-            ->and($dto->age)->toBe(123);
+            ->and($res->getDuzzleResult()->firstName)->toBe('John')
+            ->and($res->getDuzzleResult()->lastName)->toBe('Doe')
+            ->and($res->getDuzzleResult()->age)->toBe(123);
     });
 
     it('serializes input DTO', function () {
@@ -49,18 +47,19 @@ describe('JsonApi Client', function () {
             DuzzleOptionsKeys::INPUT => $input,
             DuzzleOptionsKeys::OUTPUT => TestPersonDto::class,
         ]);
-        expect($output)
+        expect($output->getDuzzleResult())
             ->toBeInstanceOf(TestPersonDto::class)
-            ->and($output->firstName)->toBe('John')
-            ->and($output->lastName)->toBe('Doe')
-            ->and($output->age)->toBe(123);
+            ->and($output->getDuzzleResult()->firstName)->toBe('John')
+            ->and($output->getDuzzleResult()->lastName)->toBe('Doe')
+            ->and($output->getDuzzleResult()->age)->toBe(123);
     });
 
     it('deserializes error to array when no ERROR type option set', function () {
         try {
             $this->duzzle->request('GET', '/json-api/simple-error');
         } catch (RequestException $error) {
-            expect($error->error)
+            expect($error->getResponse())->toBeInstanceOf(DuzzleResponseInterface::class)
+                ->and($error->getResponse()->getDuzzleResult())
                 ->toBeArray()
                 ->toMatchArray(['message' => 'Something failed', 'code' => 299]);
         }
@@ -72,10 +71,11 @@ describe('JsonApi Client', function () {
                 DuzzleOptionsKeys::ERROR => TestErrorDto::class,
             ]);
         } catch (RequestException $error) {
-            expect($error->error)
+            expect($error->getResponse())->toBeInstanceOf(DuzzleResponseInterface::class)
+                ->and($error->getResponse()->getDuzzleResult())
                 ->toBeInstanceOf(TestErrorDto::class)
-                ->and($error->error->message)->toBe('Something failed')
-                ->and($error->error->code)->toBe(299);
+                ->and($error->getResponse()->getDuzzleResult()->message)->toBe('Something failed')
+                ->and($error->getResponse()->getDuzzleResult()->code)->toBe(299);
         }
     });
 
@@ -83,8 +83,8 @@ describe('JsonApi Client', function () {
         $res = $this->duzzle->request('GET', '/json-api/simple-get', [
             DuzzleOptionsKeys::OUTPUT => PropertyWithResponseDto::class,
         ]);
-        expect($res)
+        expect($res->getDuzzleResult())
             ->toBeInstanceOf(PropertyWithResponseDto::class)
-            ->and($res->getResponse())->toBeInstanceOf(Response::class);
+            ->and($res->getDuzzleResult()->getResponse())->toBeInstanceOf(Response::class);
     });
 });

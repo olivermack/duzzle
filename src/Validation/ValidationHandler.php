@@ -4,50 +4,35 @@ declare(strict_types=1);
 
 namespace Duzzle\Validation;
 
-use Duzzle\DuzzleInterface;
 use Duzzle\DuzzleOptionsKeys;
 use Duzzle\DuzzleTarget;
 use Duzzle\Validation\Strategy\ValidationStrategyCollection;
 use Duzzle\Validation\Strategy\ValidationStrategyInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final readonly class ValidationDecorator implements DuzzleInterface
+readonly class ValidationHandler
 {
-    public const string INPUT_VALIDATION = 'input_validation';
-
-    public const string OUTPUT_VALIDATION = 'output_validation';
-
     public function __construct(
-        private DuzzleInterface $decorated,
         private ValidatorInterface $validator,
         private ValidationStrategyCollection $strategies,
         private array $defaultOptions = []
     ) {
     }
 
-    public function request(string $method, string $url, array $options = []): mixed
+    public function handleInputValidation(array $requestOptions): void
     {
-        $inputType = $options[DuzzleOptionsKeys::INPUT] ?? null;
+        $inputType = $requestOptions[DuzzleOptionsKeys::INPUT] ?? null;
 
-        if (!empty($inputType) && ($inputStrategy = $this->getInputValidationStrategy($options)) instanceof ValidationStrategyInterface) {
+        if (!empty($inputType) && ($inputStrategy = $this->getInputValidationStrategy($requestOptions)) instanceof ValidationStrategyInterface) {
             $violations = $this->validator->validate($inputType);
             $inputStrategy->handleViolations(DuzzleTarget::INPUT, $inputType, $violations);
         }
-
-        $res = $this->decorated->request($method, $url, array_merge($this->defaultOptions, $options));
-
-        if (!empty($res) && ($outputStrategy = $this->getOutputValidationStrategy($options)) instanceof ValidationStrategyInterface) {
-            $violations = $this->validator->validate($res);
-            $outputStrategy->handleViolations(DuzzleTarget::OUTPUT, $res, $violations);
-        }
-
-        return $res;
     }
 
     private function getInputValidationStrategy(array $options): ?ValidationStrategyInterface
     {
-        $strategy = $options[self::INPUT_VALIDATION]
-            ?? $this->defaultOptions[self::INPUT_VALIDATION]
+        $strategy = $options[DuzzleOptionsKeys::INPUT_VALIDATION]
+            ?? $this->defaultOptions[DuzzleOptionsKeys::INPUT_VALIDATION]
             ?? null;
 
         if (is_string($strategy)) {
@@ -57,10 +42,18 @@ final readonly class ValidationDecorator implements DuzzleInterface
         return $strategy;
     }
 
+    public function handleOutputValidation(mixed $output, array $requestOptions): void
+    {
+        if (!empty($output) && ($outputStrategy = $this->getOutputValidationStrategy($requestOptions)) instanceof ValidationStrategyInterface) {
+            $violations = $this->validator->validate($output);
+            $outputStrategy->handleViolations(DuzzleTarget::OUTPUT, $output, $violations);
+        }
+    }
+
     private function getOutputValidationStrategy(array $options): ?ValidationStrategyInterface
     {
-        $strategy = $options[self::OUTPUT_VALIDATION]
-            ?? $this->defaultOptions[self::OUTPUT_VALIDATION]
+        $strategy = $options[DuzzleOptionsKeys::OUTPUT_VALIDATION]
+            ?? $this->defaultOptions[DuzzleOptionsKeys::OUTPUT_VALIDATION]
             ?? null;
 
         if (is_string($strategy)) {

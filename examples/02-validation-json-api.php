@@ -47,7 +47,7 @@ $result = $duzzle->request('POST', '/todos', [
     DuzzleOptionsKeys::OUTPUT => Todo::class
 ]);
 
-var_dump($result);
+var_dump($result->getDuzzleResult());
 
 /**
  * console.WARNING: Validation of input `Todo` failed with 3 violation(s) {"violations":[{"property":"userId","message":"This value should be positive.","code":"778b7ae0-84d3-481a-9dec-35fdb64b1d78","value":-5},{"property":"title","message":"This value should not be blank.","code":"c1051bb4-d103-4f74-8988-acbcafc7fdc3","value":""},{"property":"title","message":"This value is too short. It should have 1 character or more.","code":"9ff3fdc4-b214-49db-8718-39c315e33d45","value":""}]} []

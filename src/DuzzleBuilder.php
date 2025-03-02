@@ -6,13 +6,16 @@ namespace Duzzle;
 
 use Duzzle\Serialization\ContextBuilderInterface;
 use Duzzle\Serialization\DefaultSerializerFactory;
-use Duzzle\Serialization\SerializationDecorator;
+use Duzzle\Serialization\SerializationHandler;
+use Duzzle\Serialization\SerializationMiddleware;
 use Duzzle\Validation\DefaultStrategyCollectionFactory;
 use Duzzle\Validation\DefaultValidatorFactory;
 use Duzzle\Validation\Strategy\ValidationStrategyCollection;
-use Duzzle\Validation\ValidationDecorator;
+use Duzzle\Validation\ValidationHandler;
+use Duzzle\Validation\ValidationMiddleware;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\HandlerStack;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Serializer\Serializer;
@@ -22,7 +25,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 final class DuzzleBuilder
 {
     private ?ClientInterface $httpClient = null;
-    private ?SerializerInterface $serializer = null;
+    private ?Serializer $serializer = null;
     private ?ContextBuilderInterface $serializationContextBuilder = null;
     private ?LoggerInterface $logger = null;
     private ?ValidatorInterface $validator = null;
@@ -87,19 +90,32 @@ final class DuzzleBuilder
 
     public function build(): DuzzleInterface
     {
-        $duzzle = new Duzzle(
-            $this->httpClient ?? new Client($this->config)
-        );
+        $handlerStack = HandlerStack::create();
 
         if ($this->serializer instanceof SerializerInterface) {
-            $duzzle = new SerializationDecorator($duzzle, $this->serializer, $this->serializationContextBuilder, $this->config);
+            // it is vital to add the serialization middleware "before" the prepare_body middleware
+            // of guzzle is applied in order to allow setting the request payload
+            $handlerStack->before('prepare_body', new SerializationMiddleware(
+                new SerializationHandler($this->serializer, $this->serializationContextBuilder)
+            ), 'duzzle_serialization');
         }
 
         if ($this->validator instanceof ValidatorInterface) {
             $strategyCollection = $this->validationStrategyCollection ?? DefaultStrategyCollectionFactory::create($this->logger);
-            $duzzle = new ValidationDecorator($duzzle, $this->validator, $strategyCollection, $this->config);
+            $handlerStack->before(
+                'duzzle_serialization',
+                new ValidationMiddleware(
+                    new ValidationHandler($this->validator, $strategyCollection, $this->config)
+                ),
+                'duzzle_validation'
+            );
         }
 
-        return $duzzle;
+        return new Duzzle(
+            $this->httpClient ?? new Client([
+                ...$this->config,
+                'handler' => $handlerStack,
+            ])
+        );
     }
 }

@@ -11,12 +11,15 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
-final readonly class InformativeValidationStrategy implements ValidationStrategyInterface
+final class InformativeValidationStrategy implements ValidationStrategyInterface
 {
     public function __construct(
-        private readonly LoggerInterface $logger = new NullLogger(),
+        private ?LoggerInterface $logger,
         private readonly string $logLevel = LogLevel::WARNING,
     ) {
+        if (null === $this->logger) {
+            $this->logger = new NullLogger();
+        }
     }
 
     public function handleViolations(DuzzleTarget $target, mixed $value, ConstraintViolationListInterface $violations): void

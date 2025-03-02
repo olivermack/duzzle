@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 
 class DefaultStrategyCollectionFactory
 {
-    public static function create(?LoggerInterface $logger): ValidationStrategyCollection
+    public static function create(?LoggerInterface $logger = null): ValidationStrategyCollection
     {
         return new ValidationStrategyCollection([
             DefaultStrategyKey::NOOP->value => new NoopValidationStrategy(),
