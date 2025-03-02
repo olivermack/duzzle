@@ -6,6 +6,7 @@ use Duzzle\DuzzleBuilder;
 use Duzzle\DuzzleInterface;
 use Duzzle\Serialization\ContextBuilderInterface;
 use GuzzleHttp\ClientInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -78,6 +79,14 @@ describe('DuzzleBuilder', function () {
             DuzzleBuilder::create()
                 ->withDefaultSerializer()
                 ->withValidator(Mockery::mock(ValidatorInterface::class))
+                ->build()
+        )->toBeInstanceOf(DuzzleInterface::class);
+    });
+
+    it('builds with custom logger', function () {
+        expect(
+            DuzzleBuilder::create()
+                ->withLogger(Mockery::mock(LoggerInterface::class))
                 ->build()
         )->toBeInstanceOf(DuzzleInterface::class);
     });
