@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   phpstan:
@@ -104,7 +105,7 @@ jobs:
           hide_complexity: true
           indicators: true
           output: both
-          thresholds: '90 99'
+          thresholds: '90 95'
 
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
