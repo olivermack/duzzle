@@ -132,7 +132,7 @@ jobs:
 #            -v "$PWD/tests/__support/wiremock":/home/wiremock
 #
       - name: Run WireMock
-        run: docker compose up wiremock
+        run: docker compose up -d wiremock
 
 #      - name: Show Wiremock logs
 #        run: |
