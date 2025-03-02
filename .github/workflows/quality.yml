@@ -55,3 +55,90 @@ jobs:
 
       - name: Execute PHP CS Fixer
         run: vendor/bin/php-cs-fixer fix --diff --dry-run
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Download dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Download Pest
+        run: composer bin pest update --no-interaction --no-progress
+
+      - name: Run Tests
+        run: vendor/bin/pest tests/Unit/
+
+  arch-tests:
+    name: Architecture Tests
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Download dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Download Pest
+        run: composer bin pest update --no-interaction --no-progress
+
+      - name: Run Tests
+        run: vendor/bin/pest tests/Architecture/
+
+  functional-tests:
+    name: Functional Tests
+    runs-on: ubuntu-22.04
+
+    services:
+      wiremock:
+        image: wiremock/wiremock
+        env:
+          WIREMOCK_OPTIONS: "--verbose --global-response-templating --disable-gzip"
+        volumes:
+          - ./tests/__support/wiremock:/home/wiremock
+        ports:
+          - 8080:8080
+
+    env:
+      WIREMOCK_HOST: http://localhost:8080
+
+    steps:
+      - name: List dir
+        run: ls -la
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Download dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Download Pest
+        run: composer bin pest update --no-interaction --no-progress
+
+      - name: Run Tests
+        run: vendor/bin/pest tests/Feature/
