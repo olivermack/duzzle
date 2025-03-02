@@ -127,3 +127,61 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  tests-lowest:
+    runs-on: ubuntu-latest
+
+    env:
+      WIREMOCK_HOST: http://localhost:8080
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-lowest
+
+      - name: Run WireMock
+        run: docker compose up -d wiremock
+
+      - name: Wait for Wiremock
+        run: |
+          curl --retry 5 --retry-delay 3 --retry-all-errors $WIREMOCK_HOST/__admin/health
+
+      - name: Run Pest tests
+        run: XDEBUG_MODE=coverage vendor/bin/pest --coverage --min=90 --coverage-cobertura coverage/coverage.cobertura.xml
+
+      - name: Show Wiremock logs
+        if: always()
+        run: docker compose logs wiremock
+
+      - name: Docker Compose Down
+        if: always()
+        run: docker compose down
+
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage/coverage.cobertura.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '90 95'
+
+      - name: Write to Job Summary
+        run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
