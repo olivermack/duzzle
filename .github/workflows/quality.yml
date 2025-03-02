@@ -128,8 +128,8 @@ jobs:
           docker run -d \
             --name wiremock \
             -p 8080:8080 \
-            wiremock/wiremock:latest
-            -v "$PWD/tests/__support/wiremock":/home/wiremock \
+            wiremock/wiremock:latest \
+            -v "$PWD/tests/__support/wiremock":/home/wiremock
 
       - name: Wait for WireMock
         run: |
