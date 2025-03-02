@@ -65,6 +65,8 @@ jobs:
         image: wiremock/wiremock
         env:
           WIREMOCK_OPTIONS: "--verbose --global-response-templating --disable-gzip"
+        volumes:
+          - ./tests/__support/wiremock:/home/wiremock
         ports:
           - 8080:8080
 
