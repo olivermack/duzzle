@@ -127,3 +127,40 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  tests-lowest:
+    runs-on: ubuntu-latest
+
+    env:
+      WIREMOCK_HOST: http://localhost:8080
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: xdebug
+
+      - name: Install Composer dependencies
+        run: composer update --no-progress --prefer-lowest
+
+      - name: Run WireMock
+        run: docker compose up -d wiremock
+
+      - name: Wait for Wiremock
+        run: |
+          curl --retry 5 --retry-delay 3 --retry-all-errors $WIREMOCK_HOST/__admin/health
+
+      - name: Run Pest tests
+        run: vendor/bin/pest
+
+      - name: Show Wiremock logs
+        if: always()
+        run: docker compose logs wiremock
+
+      - name: Docker Compose Down
+        if: always()
+        run: docker compose down
