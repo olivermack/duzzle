@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Duzzle;
 
+use GuzzleHttp\Psr7\Response;
+
 interface DuzzleInterface
 {
     /**
@@ -12,12 +14,17 @@ interface DuzzleInterface
      * @template TOutputDto of object
      *
      * @param array{
-     *     input?: TInputDto,
-     *     output?: class-string<TOutputDto>,
-     *     error?: class-string<TErrorDto>,
+     *      format?: string,
+     *      input?: TInputDto,
+     *      input_format?: string,
+     *      output?: class-string<TOutputDto>,
+     *      output_format?: string,
+     *      error?: class-string<TErrorDto>,
+     *      error_format?: string,
+     *      headers?: array<string, string>,
      * } $options
      *
-     * @return TOutputDto|TErrorDto
+     * @return mixed|Response|TOutputDto|TErrorDto
      */
     public function request(string $method, string $url, array $options = []): mixed;
 }

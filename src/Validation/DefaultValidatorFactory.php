@@ -7,7 +7,7 @@ namespace Duzzle\Validation;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class DefaultValidatorFactory
+final readonly class DefaultValidatorFactory
 {
     public static function create(): ValidatorInterface
     {

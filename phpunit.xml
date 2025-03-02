@@ -4,6 +4,9 @@
          bootstrap="vendor/autoload.php"
          colors="true"
 >
+    <php>
+        <env name="WIREMOCK_HOST" value="http://wiremock:8080" />
+    </php>
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests/Unit</directory>
@@ -12,7 +15,7 @@
             <directory suffix="Test.php">./tests/Feature</directory>
         </testsuite>
         <testsuite name="Architecture">
-            <directory suffix="Test.php">tests/Architecture</directory>
+            <directory suffix="Test.php">./tests/Architecture</directory>
         </testsuite>
     </testsuites>
     <source>
@@ -21,6 +24,10 @@
         </include>
         <exclude>
             <directory suffix="Exception.php">./src</directory>
+            <directory suffix="Interface.php">./src</directory>
+            <file>./src/DuzzleOptionsKeys.php</file>
+            <file>./src/DuzzleTarget.php</file>
+            <file>./src/Validation/Strategy/DefaultStrategyKey.php</file>
         </exclude>
     </source>
 </phpunit>

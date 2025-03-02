@@ -6,7 +6,7 @@ namespace Duzzle\Validation\Strategy;
 
 use Duzzle\Exception\InvalidArgumentException;
 
-class ValidationStrategyCollection implements \IteratorAggregate
+final class ValidationStrategyCollection implements \IteratorAggregate
 {
     public function __construct(private array $storage = [])
     {

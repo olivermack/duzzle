@@ -28,12 +28,18 @@ final class DuzzleBuilder
     private ?ValidatorInterface $validator = null;
     private ?ValidationStrategyCollection $validationStrategyCollection = null;
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function __construct(private array $config = [])
     {
         $this->config = array_merge([DuzzleOptionsKeys::FORMAT => 'json'], $this->config);
         $this->logger = new NullLogger();
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public static function create(array $config = []): self
     {
         return new self($config);
@@ -85,11 +91,11 @@ final class DuzzleBuilder
             $this->httpClient ?? new Client($this->config)
         );
 
-        if ($this->serializer) {
+        if ($this->serializer instanceof SerializerInterface) {
             $duzzle = new SerializationDecorator($duzzle, $this->serializer, $this->serializationContextBuilder, $this->config);
         }
 
-        if ($this->validator) {
+        if ($this->validator instanceof ValidatorInterface) {
             $strategyCollection = $this->validationStrategyCollection ?? DefaultStrategyCollectionFactory::create($this->logger);
             $duzzle = new ValidationDecorator($duzzle, $this->validator, $strategyCollection, $this->config);
         }

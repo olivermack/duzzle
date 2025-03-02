@@ -11,17 +11,17 @@ use Duzzle\Validation\Strategy\ValidationStrategyCollection;
 use Duzzle\Validation\Strategy\ValidationStrategyInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class ValidationDecorator implements DuzzleInterface
+final readonly class ValidationDecorator implements DuzzleInterface
 {
     public const string INPUT_VALIDATION = 'input_validation';
 
     public const string OUTPUT_VALIDATION = 'output_validation';
 
     public function __construct(
-        private readonly DuzzleInterface $decorated,
-        private readonly ValidatorInterface $validator,
-        private readonly ValidationStrategyCollection $strategies,
-        private readonly array $defaultOptions = []
+        private DuzzleInterface $decorated,
+        private ValidatorInterface $validator,
+        private ValidationStrategyCollection $strategies,
+        private array $defaultOptions = []
     ) {
     }
 
@@ -29,14 +29,14 @@ final class ValidationDecorator implements DuzzleInterface
     {
         $inputType = $options[DuzzleOptionsKeys::INPUT] ?? null;
 
-        if ($inputType && $inputStrategy = $this->getInputValidationStrategy($options)) {
+        if (!empty($inputType) && ($inputStrategy = $this->getInputValidationStrategy($options)) instanceof ValidationStrategyInterface) {
             $violations = $this->validator->validate($inputType);
             $inputStrategy->handleViolations(DuzzleTarget::INPUT, $inputType, $violations);
         }
 
         $res = $this->decorated->request($method, $url, array_merge($this->defaultOptions, $options));
 
-        if ($res && $outputStrategy = $this->getOutputValidationStrategy($options)) {
+        if (!empty($res) && ($outputStrategy = $this->getOutputValidationStrategy($options)) instanceof ValidationStrategyInterface) {
             $violations = $this->validator->validate($res);
             $outputStrategy->handleViolations(DuzzleTarget::OUTPUT, $res, $violations);
         }

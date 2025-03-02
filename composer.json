@@ -34,14 +34,22 @@
         "friendsofphp/php-cs-fixer": "^3.70",
         "symfony/validator": "^7.2",
         "mockery/mockery": "^1.6",
-        "wiremock-php/wiremock-php": "^2.35"
+        "wiremock-php/wiremock-php": "^2.35",
+        "bamarni/composer-bin-plugin": "^1.8"
     },
     "suggest": {
         "symfony/validator": "To allow request and response DTO validation"
     },
     "config": {
         "allow-plugins": {
+            "bamarni/composer-bin-plugin": true,
             "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "bamarni-bin": {
+            "bin-links": true,
+            "forward-command": false
         }
     },
     "scripts": {
@@ -49,6 +57,6 @@
         "fix": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --config=.php-cs-fixer.dist.php --verbose",
         "test": "pest",
         "test-full": "XDEBUG_MODE=coverage pest --coverage --min=90",
-        "test-arch": "pest "
+        "test-arch": "pest"
     }
 }

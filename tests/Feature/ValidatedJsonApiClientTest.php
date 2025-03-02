@@ -14,7 +14,7 @@ describe('Validated JsonApi Client', function () {
     beforeEach(function () {
         $this->httpClient = new GuzzleHttp\Client([
             'timeout' => 1.0,
-            'base_uri' => 'http://wiremock:8080/',
+            'base_uri' => $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/',
         ]);
 
         $this->duzzle = DuzzleBuilder::create([
