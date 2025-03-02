@@ -35,9 +35,11 @@
         "symfony/validator": "^7.2",
         "mockery/mockery": "^1.6",
         "wiremock-php/wiremock-php": "^2.35",
-        "bamarni/composer-bin-plugin": "^1.8"
+        "bamarni/composer-bin-plugin": "^1.8",
+        "monolog/monolog": "^3.8"
     },
     "suggest": {
+        "monolog/monolog": "A logger to use for informative DTO validation",
         "symfony/validator": "To allow request and response DTO validation"
     },
     "config": {
