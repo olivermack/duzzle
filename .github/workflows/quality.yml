@@ -131,16 +131,16 @@ jobs:
 #            wiremock/wiremock:latest \
 #            -v "$PWD/tests/__support/wiremock":/home/wiremock
 #
-#      - name: Wait for WireMock
-#        run: |
-#          for i in {1..10}; do
-#            if curl -s http://localhost:8080/__admin >/dev/null 2>&1; then
-#              echo "WireMock is up!"
-#              break
-#            fi
-#            echo "Waiting for WireMock..."
-#            sleep 2
-#          done
+      - name: Wait for WireMock
+        run: |
+          for i in {1..10}; do
+            if curl -s http://localhost:8080/__admin >/dev/null 2>&1; then
+              echo "WireMock is up!"
+              break
+            fi
+            echo "Waiting for WireMock..."
+            sleep 2
+          done
 
       - name: Run WireMock
         run: docker compose up -d wiremock
