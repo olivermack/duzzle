@@ -123,24 +123,27 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-progress --prefer-dist
 
-      - name: Start WireMock container
-        run: |
-          docker run -d \
-            --name wiremock \
-            -p 8080:8080 \
-            wiremock/wiremock:latest \
-            -v "$PWD/tests/__support/wiremock":/home/wiremock
+#      - name: Start WireMock container
+#        run: |
+#          docker run -d \
+#            --name wiremock \
+#            -p 8080:8080 \
+#            wiremock/wiremock:latest \
+#            -v "$PWD/tests/__support/wiremock":/home/wiremock
+#
+#      - name: Wait for WireMock
+#        run: |
+#          for i in {1..10}; do
+#            if curl -s http://localhost:8080/__admin >/dev/null 2>&1; then
+#              echo "WireMock is up!"
+#              break
+#            fi
+#            echo "Waiting for WireMock..."
+#            sleep 2
+#          done
 
-      - name: Wait for WireMock
-        run: |
-          for i in {1..10}; do
-            if curl -s http://localhost:8080/__admin >/dev/null 2>&1; then
-              echo "WireMock is up!"
-              break
-            fi
-            echo "Waiting for WireMock..."
-            sleep 2
-          done
+      - name: Run WireMock
+        run: docker compose up -d wiremock
 
       - name: Run Pest tests
         run: |
