@@ -65,7 +65,7 @@ class DefaultSerializerFactory
             new XmlEncoder(),
         ];
 
-        /**
+        /*
          * Build the Serializer
          */
         return new Serializer($normalizers, $encoders);
