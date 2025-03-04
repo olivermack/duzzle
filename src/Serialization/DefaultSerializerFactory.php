@@ -42,7 +42,7 @@ class DefaultSerializerFactory
                         ObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true,
                     ]
                 ),
-                new DateTimeNormalizer()
+                new DateTimeNormalizer(),
             ],
             [
                 new JsonEncoder(),
