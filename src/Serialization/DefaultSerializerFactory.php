@@ -11,6 +11,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -20,14 +21,14 @@ class DefaultSerializerFactory
     public static function create(): Serializer
     {
         /**
-         * 1) Create a metadata factory that reads PHP 8 attributes.
+         * Create a metadata factory that reads PHP 8 attributes.
          */
         $classMetadataFactory = new ClassMetadataFactory(
             new AttributeLoader()
         );
 
         /**
-         * 2) Create a PropertyInfo extractor that can interpret both:
+         * Create a PropertyInfo extractor that can interpret both:
          *    - @var docblocks (PhpDocExtractor)
          *    - Reflection (ReflectionExtractor) for native type hints (including property promotion)
          */
@@ -41,17 +42,18 @@ class DefaultSerializerFactory
         );
 
         /**
-         * 3) Create the ObjectNormalizer:
+         * Create the ObjectNormalizer:
          *    - Uses our ClassMetadataFactory (so it knows about #[Groups], #[SerializedName], etc.)
          *    - Uses the PropertyInfo extractor for type resolution
          */
         $objectNormalizer = new ObjectNormalizer(
             $classMetadataFactory,
+            nameConverter: new MetadataAwareNameConverter($classMetadataFactory),
             propertyInfoExtractor: $propertyInfoExtractor
         );
 
         /**
-         * 4) Combine Normalizers (e.g., DateTimeNormalizer for \DateTimeInterface) and Encoders (JSON + XML).
+         * Combine Normalizers (e.g., DateTimeNormalizer for \DateTimeInterface) and Encoders (JSON + XML).
          */
         $normalizers = [
             new DateTimeNormalizer(),
@@ -63,8 +65,8 @@ class DefaultSerializerFactory
             new XmlEncoder(),
         ];
 
-        /*
-         * 5) Build the Serializer
+        /**
+         * Build the Serializer
          */
         return new Serializer($normalizers, $encoders);
     }
