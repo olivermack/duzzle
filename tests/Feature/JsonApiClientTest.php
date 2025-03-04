@@ -13,7 +13,9 @@ use Duzzle\Tests\Fixtures\TestPersonDtoWithPropertyPromotion;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use WireMock\Client\WireMock;
 
 describe('JsonApi Client', function () {
@@ -42,6 +44,24 @@ describe('JsonApi Client', function () {
             ->toMatchArray(['foo' => 'bar']);
     });
 
+    it('does not fail if invalid INPUT_FORMAT option given', function () {
+        $res = $this->duzzle->request('GET', '/json-api/simple-get', [
+            DuzzleOptionsKeys::INPUT_FORMAT => 1,
+        ]);
+        expect($res->getDuzzleResult())
+            ->toBeArray()
+            ->toMatchArray(['foo' => 'bar']);
+    });
+
+    it('does not fail if invalid OUTPUT_FORMAT option given', function () {
+        $res = $this->duzzle->request('GET', '/json-api/simple-get', [
+            DuzzleOptionsKeys::OUTPUT_FORMAT => 1,
+        ]);
+        expect($res->getDuzzleResult())
+            ->toBeArray()
+            ->toMatchArray(['foo' => 'bar']);
+    });
+
     it('deserializes to DTO with property promotion', function () {
         $res = $this->duzzle->request('GET', '/json-api/get-person', [
             DuzzleOptionsKeys::OUTPUT => TestPersonDtoWithPropertyPromotion::class,
@@ -53,7 +73,7 @@ describe('JsonApi Client', function () {
             ->and($res->getDuzzleResult()->age)->toBe(123);
     });
 
-    it('serializes input DTO', function () {
+    it('serializes input DTO and output DTO', function () {
         $input = new TestPersonDtoWithPropertyPromotion('John', 'Doe', 123);
         $output = $this->duzzle->request('POST', '/json-api/post-person', [
             DuzzleOptionsKeys::INPUT => $input,
@@ -65,6 +85,17 @@ describe('JsonApi Client', function () {
             ->and($output->getDuzzleResult()->lastName)->toBe('Doe')
             ->and($output->getDuzzleResult()->age)->toBe(123);
     });
+
+    it('fails when output DTO does not match type if context requests to enforce type', function () {
+        $input = new TestPersonDtoWithPropertyPromotion('John', 'Doe', 123);
+        $output = $this->duzzle->request('POST', '/json-api/post-person', [
+            DuzzleOptionsKeys::INPUT => $input,
+            DuzzleOptionsKeys::OUTPUT => TestPersonDto::class,
+            DuzzleOptionsKeys::DENORMALIZATION_CONTEXT => [
+                ObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => false,
+            ],
+        ]);
+    })->throws(NotNormalizableValueException::class, 'The type of the "age" attribute for class "Duzzle\Tests\Fixtures\TestPersonDto" must be one of "int", "null" ("string" given)');
 
     it('deserializes error to array when no ERROR type option set', function () {
         try {
@@ -87,7 +118,13 @@ describe('JsonApi Client', function () {
                 ->and($error->getResponse()->getDuzzleResult())
                 ->toBeInstanceOf(TestErrorDto::class)
                 ->and($error->getResponse()->getDuzzleResult()->message)->toBe('Something failed')
-                ->and($error->getResponse()->getDuzzleResult()->code)->toBe(299);
+                ->and($error->getResponse()->getDuzzleResult()->code)->toBe(299)
+                ->and($error->getResponse()->getDuzzleResult()->errors)->toContainOnlyInstancesOf(TestErrorDto::class)
+                ->and($error->getResponse()->getDuzzleResult()->errors[0]->message)->toBe('Nested Error 1')
+                ->and($error->getResponse()->getDuzzleResult()->errors[0]->code)->toBe(1)
+                ->and($error->getResponse()->getDuzzleResult()->errors[1]->message)->toBe('Nested Error 2')
+                ->and($error->getResponse()->getDuzzleResult()->errors[1]->code)->toBe(2)
+            ;
         }
     });
 

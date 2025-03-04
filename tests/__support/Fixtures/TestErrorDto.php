@@ -6,10 +6,11 @@ namespace Duzzle\Tests\Fixtures;
 
 class TestErrorDto
 {
-    //    public string $message;
-    //    public int $code = 0;
-
-    public function __construct(public string $message, public int $code)
-    {
+    public function __construct(
+        public string $message,
+        public int $code,
+        /** @var TestErrorDto[] $errors */
+        public array $errors = []
+    ) {
     }
 }

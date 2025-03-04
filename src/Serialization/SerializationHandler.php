@@ -51,13 +51,15 @@ readonly class SerializationHandler
         if ($response->getStatusCode() < 400) {
             $outputType = $requestOptions[DuzzleOptionsKeys::OUTPUT] ?? null;
             $outputFormat = $requestOptions[DuzzleOptionsKeys::OUTPUT_FORMAT]
-                ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
-                ?? $this->detectOutputFormatFromResponse($response);
+                ?? $requestOptions[DuzzleOptionsKeys::FORMAT];
         } else {
             $outputType = $requestOptions[DuzzleOptionsKeys::ERROR] ?? null;
             $outputFormat = $requestOptions[DuzzleOptionsKeys::ERROR_FORMAT]
-                ?? $requestOptions[DuzzleOptionsKeys::FORMAT]
-                ?? $this->detectOutputFormatFromResponse($response);
+                ?? $requestOptions[DuzzleOptionsKeys::FORMAT];
+        }
+
+        if (!is_string($outputFormat)) {
+            $outputFormat = $this->detectOutputFormatFromResponse($response);
         }
 
         $context = true === $this->contextBuilder?->supportsDenormalizationOf((string) $outputType, $requestOptions)

@@ -7,7 +7,11 @@
     "status": 500,
     "jsonBody": {
       "message": "Something failed",
-      "code": 299
+      "code": 299,
+      "errors": [
+        {"code":  1, "message": "Nested Error 1"},
+        {"code":  2, "message": "Nested Error 2"}
+      ]
     },
     "headers": {
       "Content-Type": "application/json"
