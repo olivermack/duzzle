@@ -29,6 +29,18 @@ describe('DuzzleBuilder', function () {
         )->toBeInstanceOf(DuzzleInterface::class);
     });
 
+    it('builds with handler stack from options', function () {
+        $stack = Mockery::mock(HandlerStack::class);
+        $stack->expects('before')->atLeast()->once();
+
+        expect(
+            DuzzleBuilder::create([DuzzleBuilder::CONFIG_KEY_HANDLER => $stack])
+                ->withDefaultSerializer()
+                ->withDefaultValidator()
+                ->build()
+        )->toBeInstanceOf(DuzzleInterface::class);
+    });
+
     it('builds with default decorators', function () {
         expect(
             DuzzleBuilder::create()
