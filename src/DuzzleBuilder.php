@@ -18,6 +18,9 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\HandlerStack;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -69,16 +72,25 @@ final class DuzzleBuilder
         return $this;
     }
 
-    public function withDefaultSerializer(): self
+    /**
+     * @param ?callable(ObjectNormalizer $objectNormalizer): array<NormalizerInterface|DenormalizerInterface> $createNormalizers
+     *
+     * @return $this
+     */
+    public function withDefaultSerializer(?callable $createNormalizers = null): self
     {
-        return $this->withSerializer(DefaultSerializerFactory::create());
+        $this->withSerializer(DefaultSerializerFactory::create($createNormalizers));
+
+        return $this;
     }
 
     public function withSerializer(Serializer $serializer, ?ContextBuilderInterface $contextBuilder = null): self
     {
         $this->serializer = $serializer;
 
-        return $this;
+        return null === $contextBuilder
+            ? $this
+            : $this->withSerializationContextBuilder($contextBuilder);
     }
 
     public function withSerializationContextBuilder(ContextBuilderInterface $contextBuilder): self
