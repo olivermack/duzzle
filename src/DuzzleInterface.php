@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Duzzle;
 
+use Duzzle\Exception\UnableToProvideExpectedResultException;
+
 interface DuzzleInterface
 {
     /**
@@ -23,6 +25,8 @@ interface DuzzleInterface
      * } $options
      *
      * @return DuzzleResponseInterface<TInput, TOutput, TError>
+     *
+     * @throws UnableToProvideExpectedResultException
      */
     public function request(string $method, string $url, array $options = []): DuzzleResponseInterface;
 }

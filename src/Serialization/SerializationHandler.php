@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Duzzle\Serialization;
 
 use Duzzle\DuzzleOptionsKeys;
+use Duzzle\Exception\UnableToProvideExpectedResultException;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
@@ -70,13 +71,17 @@ readonly class SerializationHandler
             if ($result instanceof CarriesResponseInterface) {
                 $result->setResponse($response);
             }
-
-            return $result;
         } elseif ($outputFormat) {
-            return $this->serializer->decode($contents, $outputFormat, $context);
+            $result = $this->serializer->decode($contents, $outputFormat, $context);
+        } else {
+            $result = $contents;
         }
 
-        return $contents;
+        if ($outputType && !is_a($result, $outputType, true)) {
+            throw new UnableToProvideExpectedResultException(sprintf('It was not possible to yield a result of the desired type %s', $outputType));
+        }
+
+        return $result;
     }
 
     private function detectOutputFormatFromResponse(ResponseInterface $response): ?string
