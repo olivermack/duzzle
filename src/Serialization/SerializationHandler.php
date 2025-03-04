@@ -30,9 +30,10 @@ readonly class SerializationHandler
         }
 
         if (is_string($inputFormat) && !empty($inputType) && is_object($inputType)) {
-            $context = true === $this->contextBuilder?->supportsNormalizationOf($inputType)
-                ? $this->contextBuilder->buildContextForNormalizationOf($inputType)
+            $context = true === $this->contextBuilder?->supportsNormalizationOf($inputType, $requestOptions)
+                ? $this->contextBuilder->buildContextForNormalizationOf($inputType, $requestOptions)
                 : [];
+            $context = array_merge($context, $requestOptions[DuzzleOptionsKeys::NORMALIZATION_CONTEXT] ?? []);
 
             $serializedInput = $this->serializer->serialize($inputType, $inputFormat, $context);
             $requestOptions[RequestOptions::BODY] = $serializedInput;
@@ -58,9 +59,10 @@ readonly class SerializationHandler
                 ?? $this->detectOutputFormatFromResponse($response);
         }
 
-        $context = true === $this->contextBuilder?->supportsDenormalizationOf($outputType)
-            ? $this->contextBuilder->buildContextForDenormalizationOf($outputType)
+        $context = true === $this->contextBuilder?->supportsDenormalizationOf((string) $outputType, $requestOptions)
+            ? $this->contextBuilder->buildContextForDenormalizationOf((string) $outputType, $requestOptions)
             : [];
+        $context = array_merge($context, $requestOptions[DuzzleOptionsKeys::DENORMALIZATION_CONTEXT] ?? []);
 
         if (!empty($outputFormat) && !empty($outputType)) {
             $result = $this->serializer->deserialize($contents, $outputType, $outputFormat, $context);

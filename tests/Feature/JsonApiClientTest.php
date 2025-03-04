@@ -5,20 +5,32 @@ declare(strict_types=1);
 use Duzzle\DuzzleBuilder;
 use Duzzle\DuzzleOptionsKeys;
 use Duzzle\DuzzleResponseInterface;
+use Duzzle\Serialization\ContextBuilderInterface;
 use Duzzle\Tests\Fixtures\PropertyWithResponseDto;
 use Duzzle\Tests\Fixtures\TestErrorDto;
 use Duzzle\Tests\Fixtures\TestPersonDto;
 use Duzzle\Tests\Fixtures\TestPersonDtoWithPropertyPromotion;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
+use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
+use WireMock\Client\WireMock;
 
 describe('JsonApi Client', function () {
     beforeEach(function () {
+        $wireMockHost = $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/';
+        $parsedWireMockHost = parse_url($wireMockHost);
+        $this->wireMock = WireMock::create($parsedWireMockHost['host'], $parsedWireMockHost['port']);
+        $this->contextBuilderMock = Mockery::mock(ContextBuilderInterface::class, [
+            'supportsNormalizationOf' => false,
+            'supportsDenormalizationOf' => false,
+        ]);
         $this->duzzle = DuzzleBuilder::create([
             'timeout' => 1.0,
-            'base_uri' => $_ENV['WIREMOCK_HOST'] ?? 'http://wiremock:8080/',
+            'base_uri' => $wireMockHost,
         ])
             ->withDefaultSerializer()
+            ->withSerializationContextBuilder($this->contextBuilderMock)
             ->withDefaultValidator()
             ->build();
     });
@@ -86,5 +98,76 @@ describe('JsonApi Client', function () {
         expect($res->getDuzzleResult())
             ->toBeInstanceOf(PropertyWithResponseDto::class)
             ->and($res->getDuzzleResult()->getResponse())->toBeInstanceOf(Response::class);
+    });
+
+    it('handles custom serializer context', function () {
+        $class = new class {
+            #[Groups(['group1', 'group2'])]
+            public string $prop1 = '';
+            #[Groups(['group2'])]
+            public ?string $prop2 = null;
+        };
+        $instance = new $class();
+        $instance->prop1 = 'input';
+
+        $this->wireMock->stubFor(
+            WireMock::get('/foo')
+                ->withRequestBody(
+                    WireMock::equalTo('{"prop1":"input"}')
+                )
+                ->willReturn(WireMock::aResponse()->withBody('{"prop2": "output"}'))
+        );
+
+        $res = $this->duzzle->request('GET', '/foo', [
+            DuzzleOptionsKeys::OUTPUT => $class::class,
+            DuzzleOptionsKeys::INPUT => $instance,
+            DuzzleOptionsKeys::NORMALIZATION_CONTEXT => ['groups' => ['group1']],
+            DuzzleOptionsKeys::DENORMALIZATION_CONTEXT => ['groups' => ['group2']],
+        ]);
+        expect($res->getDuzzleResult())
+            ->toBeInstanceOf($class::class)
+            ->and($res->getDuzzleResult()->prop2)->toBe('output');
+    });
+
+    it('handles uses custom + builder serializer context', function () {
+        $class = new class {
+            #[Groups(['group1', 'group2'])]
+            public string $prop1 = '';
+            #[Groups(['group2'])]
+            public ?string $prop2 = null;
+        };
+        $instance = new $class();
+        $instance->prop1 = 'input';
+
+        $this->contextBuilderMock->expects('supportsNormalizationOf')
+            ->once()
+            ->withSomeOfArgs($instance)
+            ->andReturn(true);
+        $this->contextBuilderMock->expects('buildContextForNormalizationOf')
+            ->once()
+            ->withSomeOfArgs($instance)
+            ->andReturn([
+                AbstractObjectNormalizer::SKIP_NULL_VALUES => true,
+            ]);
+
+        $this->wireMock->stubFor(
+            WireMock::get('/foo')
+                ->withRequestBody(
+                    WireMock::equalTo('{"prop1":"input"}')
+                )
+                ->willReturn(WireMock::aResponse()->withBody('{"prop2": "output"}'))
+        );
+
+        // while we use group1 + group2 here we use also SKIP_NULL_VALUES
+        // so we can verify that the normalization context is indeed merged
+        $res = $this->duzzle->request('GET', '/foo', [
+            DuzzleOptionsKeys::OUTPUT => $class::class,
+            DuzzleOptionsKeys::INPUT => $instance,
+            DuzzleOptionsKeys::NORMALIZATION_CONTEXT => ['groups' => ['group1', 'group2']],
+            DuzzleOptionsKeys::DENORMALIZATION_CONTEXT => ['groups' => ['group2']],
+        ]);
+        expect($res->getDuzzleResult())
+            ->toBeInstanceOf($class::class)
+            ->and($res->getDuzzleResult()->prop2)->toBe('output');
     });
 });

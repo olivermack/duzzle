@@ -77,6 +77,12 @@ final class DuzzleBuilder
     public function withSerializer(Serializer $serializer, ?ContextBuilderInterface $contextBuilder = null): self
     {
         $this->serializer = $serializer;
+
+        return $this;
+    }
+
+    public function withSerializationContextBuilder(ContextBuilderInterface $contextBuilder): self
+    {
         $this->serializationContextBuilder = $contextBuilder;
 
         return $this;

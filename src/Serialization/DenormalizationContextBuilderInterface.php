@@ -6,7 +6,7 @@ namespace Duzzle\Serialization;
 
 interface DenormalizationContextBuilderInterface
 {
-    public function supportsDenormalizationOf(string $type): bool;
+    public function supportsDenormalizationOf(string $type, array $options = []): bool;
 
-    public function buildContextForDenormalizationOf(string $type): array;
+    public function buildContextForDenormalizationOf(string $type, array $options = []): array;
 }

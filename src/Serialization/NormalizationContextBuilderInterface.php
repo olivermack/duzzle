@@ -6,10 +6,10 @@ namespace Duzzle\Serialization;
 
 interface NormalizationContextBuilderInterface
 {
-    public function supportsNormalizationOf(object $input): bool;
+    public function supportsNormalizationOf(object $input, array $options = []): bool;
 
     /**
      * @return array<string, mixed>
      */
-    public function buildContextForNormalizationOf(object $input): array;
+    public function buildContextForNormalizationOf(object $input, array $options = []): array;
 }
