@@ -31,6 +31,8 @@ final class DuzzleBuilder
     private ?ValidatorInterface $validator = null;
     private ?ValidationStrategyCollection $validationStrategyCollection = null;
 
+    private ?HandlerStack $handlerStack = null;
+
     /**
      * @param array<string, mixed> $config
      */
@@ -88,9 +90,16 @@ final class DuzzleBuilder
         return $this;
     }
 
+    public function withHandlerStack(HandlerStack $handlerStack): self
+    {
+        $this->handlerStack = $handlerStack;
+
+        return $this;
+    }
+
     public function build(): DuzzleInterface
     {
-        $handlerStack = HandlerStack::create();
+        $handlerStack = $this->handlerStack ?? HandlerStack::create();
 
         if ($this->serializer instanceof SerializerInterface) {
             // it is vital to add the serialization middleware "before" the prepare_body middleware

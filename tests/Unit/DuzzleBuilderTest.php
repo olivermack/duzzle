@@ -6,6 +6,7 @@ use Duzzle\DuzzleBuilder;
 use Duzzle\DuzzleInterface;
 use Duzzle\Serialization\ContextBuilderInterface;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\HandlerStack;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -13,6 +14,19 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 describe('DuzzleBuilder', function () {
     it('builds without custom addons', function () {
         expect(DuzzleBuilder::create()->build())->toBeInstanceOf(DuzzleInterface::class);
+    });
+
+    it('builds with handler stack', function () {
+        $stack = Mockery::mock(HandlerStack::class);
+        $stack->expects('before')->atLeast()->once();
+
+        expect(
+            DuzzleBuilder::create()
+                ->withHandlerStack($stack)
+                ->withDefaultSerializer()
+                ->withDefaultValidator()
+                ->build()
+        )->toBeInstanceOf(DuzzleInterface::class);
     });
 
     it('builds with default decorators', function () {
