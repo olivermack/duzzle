@@ -73,7 +73,7 @@ readonly class SerializationHandler
             if ($result instanceof CarriesResponseInterface) {
                 $result->setResponse($response);
             }
-        } elseif ($outputFormat) {
+        } elseif (!empty($outputFormat)) {
             $result = $this->serializer->decode($contents, $outputFormat, $context);
         } else {
             $result = $contents;
