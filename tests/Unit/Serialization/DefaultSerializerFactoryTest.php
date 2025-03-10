@@ -5,6 +5,8 @@ declare(strict_types=1);
 use Duzzle\Serialization\DefaultSerializerFactory;
 use Duzzle\Tests\Fixtures\TestNormalizer;
 use Duzzle\Tests\Fixtures\Todo;
+use Symfony\Component\Serializer\Attribute\SerializedName;
+use Symfony\Component\Serializer\Attribute\SerializedPath;
 use Symfony\Component\Serializer\Serializer;
 
 describe('DefaultSerializerFactoryTest', function () {
@@ -41,5 +43,37 @@ describe('DefaultSerializerFactoryTest', function () {
 
         $res = $sut->serialize('TestNormalizerInput', 'json');
         expect($res)->toBe('"TestNormalizerInput normalized as json"');
+    });
+
+    it('default serializer translates property names', function () {
+        $class = new class {
+            #[SerializedName('PROP_1')]
+            public string $prop1 = '';
+        };
+        $instance = new $class();
+        $instance->prop1 = 'input';
+
+        $sut = DefaultSerializerFactory::create();
+        $res = $sut->serialize($instance, 'json');
+        expect($res)->toBe('{"PROP_1":"input"}');
+
+        $res2 = $sut->deserialize($res, $class::class, 'json');
+        expect($res2)->toEqual($instance);
+    });
+
+    it('default serializer translates property paths', function () {
+        $class = new class {
+            #[SerializedPath('[foo][BAR]')]
+            public string $prop1 = '';
+        };
+        $instance = new $class();
+        $instance->prop1 = 'input';
+
+        $sut = DefaultSerializerFactory::create();
+        $res = $sut->serialize($instance, 'json');
+        expect($res)->toBe('{"foo":{"BAR":"input"}}');
+
+        $res2 = $sut->deserialize($res, $class::class, 'json');
+        expect($res2)->toEqual($instance);
     });
 });

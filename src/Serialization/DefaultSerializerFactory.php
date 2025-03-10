@@ -11,6 +11,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
@@ -33,6 +34,7 @@ class DefaultSerializerFactory
         $extractor = new PropertyInfoExtractor(typeExtractors: [new PhpDocExtractor(), new ReflectionExtractor()]);
         $objectNormalizer = new ObjectNormalizer(
             classMetadataFactory: $classMetadataFactory,
+            nameConverter: new MetadataAwareNameConverter($classMetadataFactory),
             propertyTypeExtractor: $extractor,
             defaultContext: [
                 AbstractObjectNormalizer::DISABLE_TYPE_ENFORCEMENT => true,
