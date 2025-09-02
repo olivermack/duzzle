@@ -15,7 +15,7 @@ If you’re seeking a straightforward, “DTO-first” approach to RESTful inter
 Install the package via composer
 
 ```shell
-$ composer install olivermack/duzzle
+$ composer require olivermack/duzzle
 ```
 
 ## Background
